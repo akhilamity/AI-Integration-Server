@@ -8,3 +8,45 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface ErrorResponse {
+  error: string;
+}
+
+export type SessionActionPayload = { [key: string]: unknown };
+
+export interface SessionAction {
+  type: string;
+  payload: SessionActionPayload;
+  timestamp: number;
+  id: string;
+}
+
+export interface AnalyzeInput {
+  actions: SessionAction[];
+  /** @nullable */
+  sessionStart?: number | null;
+}
+
+export type QABugSeverity = (typeof QABugSeverity)[keyof typeof QABugSeverity];
+
+export const QABugSeverity = {
+  high: "high",
+  medium: "medium",
+  low: "low",
+  info: "info",
+} as const;
+
+export interface QABug {
+  title: string;
+  severity: QABugSeverity;
+  detail: string;
+}
+
+export interface QAReport {
+  summary: string;
+  bugs: QABug[];
+  testSteps: string[];
+  recommendations: string[];
+  coverage: string;
+}

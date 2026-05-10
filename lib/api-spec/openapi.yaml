@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: qa
+    description: QA analysis operations
 paths:
   /healthz:
     get:
@@ -24,6 +26,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /analyze:
+    post:
+      operationId: analyzeSession
+      tags: [qa]
+      summary: Analyze QA session
+      description: Accepts a recorded browser session and returns an AI-generated QA analysis report
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnalyzeInput"
+      responses:
+        "200":
+          description: QA analysis report
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QAReport"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +66,77 @@ components:
           type: string
       required:
         - status
-
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    SessionAction:
+      type: object
+      properties:
+        type:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+        timestamp:
+          type: integer
+        id:
+          type: string
+      required:
+        - type
+        - payload
+        - timestamp
+        - id
+    AnalyzeInput:
+      type: object
+      properties:
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/SessionAction"
+        sessionStart:
+          type: ["integer", "null"]
+      required:
+        - actions
+    QABug:
+      type: object
+      properties:
+        title:
+          type: string
+        severity:
+          type: string
+          enum: [high, medium, low, info]
+        detail:
+          type: string
+      required:
+        - title
+        - severity
+        - detail
+    QAReport:
+      type: object
+      properties:
+        summary:
+          type: string
+        bugs:
+          type: array
+          items:
+            $ref: "#/components/schemas/QABug"
+        testSteps:
+          type: array
+          items:
+            type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+        coverage:
+          type: string
+      required:
+        - summary
+        - bugs
+        - testSteps
+        - recommendations
+        - coverage

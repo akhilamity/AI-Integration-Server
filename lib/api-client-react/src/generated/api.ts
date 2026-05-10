@@ -5,18 +5,26 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  AnalyzeInput,
+  ErrorResponse,
+  HealthStatus,
+  QAReport,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
-import type { ErrorType } from "../custom-fetch";
+import type { ErrorType, BodyType } from "../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -99,3 +107,90 @@ export function useHealthCheck<
 
   return { ...query, queryKey: queryOptions.queryKey };
 }
+
+/**
+ * Accepts a recorded browser session and returns an AI-generated QA analysis report
+ * @summary Analyze QA session
+ */
+export const getAnalyzeSessionUrl = () => {
+  return `/api/analyze`;
+};
+
+export const analyzeSession = async (
+  analyzeInput: AnalyzeInput,
+  options?: RequestInit,
+): Promise<QAReport> => {
+  return customFetch<QAReport>(getAnalyzeSessionUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(analyzeInput),
+  });
+};
+
+export const getAnalyzeSessionMutationOptions = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof analyzeSession>>,
+    TError,
+    { data: BodyType<AnalyzeInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof analyzeSession>>,
+  TError,
+  { data: BodyType<AnalyzeInput> },
+  TContext
+> => {
+  const mutationKey = ["analyzeSession"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof analyzeSession>>,
+    { data: BodyType<AnalyzeInput> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return analyzeSession(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AnalyzeSessionMutationResult = NonNullable<
+  Awaited<ReturnType<typeof analyzeSession>>
+>;
+export type AnalyzeSessionMutationBody = BodyType<AnalyzeInput>;
+export type AnalyzeSessionMutationError = ErrorType<ErrorResponse>;
+
+/**
+ * @summary Analyze QA session
+ */
+export const useAnalyzeSession = <
+  TError = ErrorType<ErrorResponse>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof analyzeSession>>,
+    TError,
+    { data: BodyType<AnalyzeInput> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof analyzeSession>>,
+  TError,
+  { data: BodyType<AnalyzeInput> },
+  TContext
+> => {
+  return useMutation(getAnalyzeSessionMutationOptions(options));
+};

@@ -14,3 +14,33 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * Accepts a recorded browser session and returns an AI-generated QA analysis report
+ * @summary Analyze QA session
+ */
+export const AnalyzeSessionBody = zod.object({
+  actions: zod.array(
+    zod.object({
+      type: zod.string(),
+      payload: zod.record(zod.string(), zod.unknown()),
+      timestamp: zod.number(),
+      id: zod.string(),
+    }),
+  ),
+  sessionStart: zod.number().nullish(),
+});
+
+export const AnalyzeSessionResponse = zod.object({
+  summary: zod.string(),
+  bugs: zod.array(
+    zod.object({
+      title: zod.string(),
+      severity: zod.enum(["high", "medium", "low", "info"]),
+      detail: zod.string(),
+    }),
+  ),
+  testSteps: zod.array(zod.string()),
+  recommendations: zod.array(zod.string()),
+  coverage: zod.string(),
+});

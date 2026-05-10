@@ -6,4 +6,11 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from "./analyzeInput";
+export * from "./errorResponse";
 export * from "./healthStatus";
+export * from "./qABug";
+export * from "./qABugSeverity";
+export * from "./qAReport";
+export * from "./sessionAction";
+export * from "./sessionActionPayload";
